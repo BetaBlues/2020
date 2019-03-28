@@ -167,9 +167,7 @@ public class Robot extends TimedRobot {
 	}
 	
 	public void teleopPeriodic() {
-
-		//hatchMotor.set(0.2);
-
+		hatchMotor.set(-0.3);
 
 		double rightAxis = -driveController.getRawAxis(rightStickID);
 		double leftAxis = -driveController.getRawAxis(leftStickID);
@@ -186,7 +184,7 @@ public class Robot extends TimedRobot {
 		togglePiston(hatchID, hatchPiston);
 		togglePiston(backLegsID, backLegs);
 		limelight(limelightID);
-		hatchForward(hatchForwardID);
+		//hatchForward(hatchForwardID);
 		sandstormStart(sandstormStartID);
 
 		slowSpeedButton(slowSpeedButtonID);
@@ -240,28 +238,32 @@ public class Robot extends TimedRobot {
 		if (manipController.getRawButtonReleased(buttonID)){
 			if (linearMotionState == true){
 				linearMotionState = false;
+				System.out.println(linearMotionState);
 			}
 			else if (linearMotionState == false){
 				linearMotionState = true;
+				System.out.println(linearMotionState);
 			}
 		}
 
 		if (linearMotionState){
-			if ((hatchMotorEncoder.getRaw()) <= 90) {
-				System.out.println(hatchMotorEncoder.getRaw());
-				System.out.println(hatchMotorEncoder.getRaw() + "    hatch motor encoder");
+		/*if ((hatchMotorEncoder.getRaw()) <= 90) {
+				//System.out.println(hatchMotorEncoder.getRaw());
+				//System.out.println(hatchMotorEncoder.getRaw() + "    hatch motor encoder");
 				hatchMotor.set(-0.3); 
 			}else {
 				hatchMotor.set(0.0);
-			}
+			}*/
+			hatchMotor.set(-0.3);
 		} else if (linearMotionState==false){
-			if ((hatchMotorEncoder.getRaw()) >= 0 ) {
+			/*if ((hatchMotorEncoder.getRaw()) >= 0 ) {
 				System.out.println(hatchMotorEncoder.getRaw());
 				System.out.println(hatchMotorEncoder.getRaw() + "    hatch motor encoder");
 				hatchMotor.set(0.3);
 			}else {
 				hatchMotor.set(0.0);
-			}
+			}*/
+			hatchMotor.set(0.3);
 		}
 			
 	}
