@@ -1,17 +1,13 @@
 package org.usfirst.frc.team5975.robot;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
-import edu.wpi.first.wpilibj.RobotDrive;
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
 
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DoubleSolenoid;
 
 // Limelight Imports
 import edu.wpi.first.networktables.NetworkTable;
@@ -19,7 +15,7 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 
 //encoder imports
-import edu.wpi.first.wpilibj.SendableBase;
+//import edu.wpi.first.wpilibj.SendableBase;
 import edu.wpi.first.wpilibj.Encoder;
 
 public class Robot extends TimedRobot {
@@ -28,7 +24,7 @@ public class Robot extends TimedRobot {
 	double KpG = 0.03;
 	boolean x = true;
 	
-	RobotDrive myRobot;
+	DifferentialDrive myRobot;
 	Spark leftMotor;
 	Spark rightMotor;
 	Spark hatchMotor;
@@ -40,7 +36,7 @@ public class Robot extends TimedRobot {
 	// RoboRio mapping
 	int leftMotorChannel=1;
 	int rightMotorChannel=2;
-	int hatchMotorChannel=5;
+	int hatchMotorChannel=0;
 	DriverStation ds = DriverStation.getInstance();
 	
 	// Driver Station / controller mapping
@@ -60,7 +56,7 @@ public class Robot extends TimedRobot {
 	//Manipulator Controls
 	int limelightID= 2; //B button
 	int hatchID = 3; //X button
-	int hatchForwardID = 4; //Y button
+	int linearMotionID = 4; //Y button
 	int frontLegsID = 5; //left Bumper
 	int backLegsID = 6; //right Bumper
 	//verify that stick1 and stick2 correspond to the left and right joysticks on the controller
@@ -80,7 +76,7 @@ public class Robot extends TimedRobot {
 	Encoder hatchMotorEncoder;
 	int hatchTurnLimit = 200;
 	int i = 0;
-	boolean linearMotionState = true;
+	boolean linearMotionState;
 	
 
 	boolean limelightButtonState = false;
@@ -104,7 +100,7 @@ public class Robot extends TimedRobot {
 		leftMotor.setInverted(false);
 		rightMotor.setInverted(false);
 		
-		myRobot = new RobotDrive(leftMotor,rightMotor);
+		myRobot = new DifferentialDrive(leftMotor,rightMotor);
 		
 		driveController  = new XboxController(joyPort1);
 		manipController = new XboxController(joyPort2);
@@ -118,11 +114,12 @@ public class Robot extends TimedRobot {
 		hatchMotorEncoder.reset();
 		runTime = 90;
 		sandstormStartState = false;
+		linearMotionState = false;
+
 		//boolean pistonForward = false;
 	}
 	
 	public void autonomousPeriodic() {
-		
 
 		double rightAxis = -driveController.getRawAxis(rightStickID);
 		double leftAxis = -driveController.getRawAxis(leftStickID);
@@ -139,7 +136,7 @@ public class Robot extends TimedRobot {
 		togglePiston(hatchID, hatchPiston);
 		togglePiston(backLegsID, backLegs);
 		limelight(limelightID);
-		hatchForward(hatchForwardID);
+		linearMotion(linearMotionID);
 		sandstormStart(sandstormStartID);
 
 		slowSpeedButton(slowSpeedButtonID);
@@ -161,13 +158,13 @@ public class Robot extends TimedRobot {
 		lastCompresserUseTime = System.currentTimeMillis();
 		gyro.reset();
 		hatchMotorEncoder.reset();
+		linearMotionState = false;
 		runTime = 90;
 		sandstormStartState = false;
 		//boolean pistonForward = false;
 	}
 	
 	public void teleopPeriodic() {
-		hatchMotor.set(-0.3);
 
 		double rightAxis = -driveController.getRawAxis(rightStickID);
 		double leftAxis = -driveController.getRawAxis(leftStickID);
@@ -184,7 +181,7 @@ public class Robot extends TimedRobot {
 		togglePiston(hatchID, hatchPiston);
 		togglePiston(backLegsID, backLegs);
 		limelight(limelightID);
-		//hatchForward(hatchForwardID);
+		linearMotion(linearMotionID);
 		sandstormStart(sandstormStartID);
 
 		slowSpeedButton(slowSpeedButtonID);
@@ -204,7 +201,6 @@ public class Robot extends TimedRobot {
 	private double limitAxis (double axis) {//mess with this so it doesn't go so fast
 		if (axis > 1.0){  
 			axis = 1.0;
-
 		}
 		else if (axis < -1.0){
 			axis = -1.0;
@@ -226,14 +222,14 @@ public class Robot extends TimedRobot {
 
 	public void togglePiston(int buttonID, Piston pistonn) {
 	
-		if (manipController.getRawButtonReleased(buttonID)){ //if the button is being pressed
+		if (manipController.getRawButtonReleased(buttonID)){ //if the button has been pressed
 		
 			pistonn.toggle();
 			lastCompresserUseTime = System.currentTimeMillis();
 		}
 	}
 
-	public void hatchForward (int buttonID){
+	public void linearMotion (int buttonID){
 
 		if (manipController.getRawButtonReleased(buttonID)){
 			if (linearMotionState == true){
@@ -283,6 +279,7 @@ public class Robot extends TimedRobot {
 			double horizonalOffset = tx.getDouble(0.0);
 			double verticalOffset = ty.getDouble(0.0);
 			double targetArea = ta.getDouble(0.0);
+			//double angle = gyro.getAngle();
 		
 			//post to smart dashboard periodically
 			SmartDashboard.putNumber("LimelightX", horizonalOffset);
@@ -293,17 +290,17 @@ public class Robot extends TimedRobot {
 		
 			if (NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getDouble(0)
 			==0.0){
-				myRobot.drive(0.0,0.0);
+				myRobot.arcadeDrive(0.0,0.0);
 				if (x){ //"i" and "x" are placeholders
 					if (i < 30){
-						myRobot.drive(0.3,0.0);
+						myRobot.arcadeDrive(0.3,0.5);
 						//hatchMotor.set(-0.3);
 						i += 1;
 					}
 					x = false;
 				}
 			}else{
-				myRobot.drive(Math.max((((maxSpeed-minSpeed)*((10-targetArea)/10))+minSpeed), minSpeed), -horizonalOffset*KpL);
+				myRobot.arcadeDrive(Math.max((((maxSpeed-minSpeed)*((10-targetArea)/10))+minSpeed), minSpeed), -horizonalOffset*KpL);
 			}
 		}
 		x = true;
@@ -322,7 +319,7 @@ public class Robot extends TimedRobot {
 		}
 	
 		if (runTime!=0 && sandstormStartState){
-			myRobot.drive(.5, -angle*KpG); // drive towards heading 0, 0.2 probably slowest possible to run 
+			myRobot.arcadeDrive(.5, -angle*KpG); // drive towards heading 0, 0.2 probably slowest possible to run 
 			runTime -= 1;
 		}
 		
@@ -332,7 +329,7 @@ public class Robot extends TimedRobot {
 		double angle = gyro.getAngle();
 	
 		if (driveController.getRawButtonPressed(buttonID)){
-			myRobot.drive(lowSpeed, -angle*KpG); 
+			myRobot.arcadeDrive(lowSpeed, -angle*KpG); 
 		
 		}	
 	}
