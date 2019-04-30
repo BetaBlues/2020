@@ -1,8 +1,8 @@
-package org.usfirst.frc.team5975.robot;
+package org.usfirst.frc.team5975.robot.subsystems;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-class Piston{
+public class Piston{
 
     DoubleSolenoid piston;
     boolean pistonForward;
