@@ -301,7 +301,7 @@ public class Robot extends TimedRobot {
 					x = false;
 				}
 			}else{
-				myRobot.arcadeDrive(Math.max((((maxSpeed-minSpeed)*((10-targetArea)/10))+minSpeed), minSpeed), -horizonalOffset*KpL);
+				myRobot.arcadeDrive(Math.max((((maxSpeed-minSpeed)*((10-targetArea)/5))+minSpeed), minSpeed), -horizonalOffset*KpL);
 			}
 		}
 		x = true;

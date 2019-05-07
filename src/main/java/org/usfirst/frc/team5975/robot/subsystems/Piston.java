@@ -1,8 +1,11 @@
 package org.usfirst.frc.team5975.robot.subsystems;
+
 import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-public class Piston{
+public class Piston extends Subsystem{
+// make abstract after we're done switching to subsystems
 
     DoubleSolenoid piston;
     boolean pistonForward;
@@ -28,6 +31,11 @@ public class Piston{
         pistonForward = true;
 
        }
+    }
+
+    @Override
+    protected void initDefaultCommand() {
+
     }
 
 }
