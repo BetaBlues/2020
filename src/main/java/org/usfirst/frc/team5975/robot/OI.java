@@ -8,12 +8,14 @@
 package org.usfirst.frc.team5975.robot;
 
 import edu.wpi.first.wpilibj.XboxController;
+import org.usfirst.frc.team5975.robot.Example;
 
 /**
  * This class is the glue that binds the controls on the physical operator
  * interface to the commands and command groups that allow control of the robot.
  */
 public class OI {
+  int hatchID = 3; //X button
   /*
   int joyPort1=0; //driver xbox controller
   int joyPort2=1; //manipulator xbox controller
@@ -30,7 +32,7 @@ public class OI {
 	
 	//Manipulator Controls
 	//int limelightID= 2; //B button
-	//int hatchID = 3; //X button
+	int hatchID = 3; //X button
 //	int linearMotionID = 4; //Y button
 //	int frontLegsID = 5; //left Bumper
 	//int backLegsID = 6; //right Bumper
@@ -68,4 +70,5 @@ public class OI {
   // until it is finished as determined by it's isFinished method.
   // button.whenReleased(new ExampleCommand()); 
   */
+ // hatchID.whenReleased(new PistonToggle.PistonToggle(Example.hatchPiston)); 
 }

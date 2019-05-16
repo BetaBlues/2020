@@ -8,6 +8,7 @@
 package org.usfirst.frc.team5975.robot.commands;
 
 import edu.wpi.first.wpilibj.command.InstantCommand;
+import org.usfirst.frc.team5975.robot.subsystems.Piston;
 
 /**
  * Add your docs here.

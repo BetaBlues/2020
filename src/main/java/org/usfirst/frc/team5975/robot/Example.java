@@ -15,6 +15,9 @@ import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.usfirst.frc.team5975.robot.subsystems.Piston;
+import edu.wpi.first.wpilibj.XboxController;
+
 
 
 /**
@@ -30,6 +33,29 @@ public class Example extends TimedRobot {
   public static Piston frontLegs;
   public static Piston backLegs;
   public static Piston hatchPiston;
+  int joyPort1=0; //driver xbox controller
+  int joyPort2=1; //manipulator xbox controller
+  
+  //Driver Controls
+	int lTriggerID = 2;
+	int rTriggerID = 3;
+	int sandstormStartID = 4;//Y button
+	int slowSpeedButtonID = 3;//X button
+	int leftStickID = 1; //left and right sticks are joysticks (axis)
+	int rightStickID = 5;
+	XboxController driveController;
+	XboxController manipController;
+	
+	//Manipulator Controls
+	//int limelightID= 2; //B button
+	int hatchID = 3; //X button
+//	int linearMotionID = 4; //Y button
+//	int frontLegsID = 5; //left Bumper
+	//int backLegsID = 6; //right Bumper
+	//verify that stick1 and stick2 correspond to the left and right joysticks on the controller
+  //6 is right, 5 is left
+  
+	
 
   Command m_autonomousCommand;
   SendableChooser<Command> m_chooser = new SendableChooser<>();
@@ -43,8 +69,10 @@ public class Example extends TimedRobot {
     m_oi = new OI();
     frontLegs = new Piston(RobotMap.FrontLegsForwardChannel, RobotMap.FrontLegsBackChannel, "Front legs");
     backLegs = new Piston(RobotMap.BackLegsForwardChannel, RobotMap.BackLegsBackChannel, "Back legs");
-    hatchPiston = new Piston(RobotMap.hatchPistonForwardChannel, RobotMap.hatchPistonBackChannel, "Hatch piston");
-
+    hatchPiston = new Piston(RobotMap.HatchForwardChannel, RobotMap.HatchBackChannel, "Hatch piston");
+    
+    driveController  = new XboxController(joyPort1);
+    manipController = new XboxController(joyPort2);
    // m_chooser.setDefaultOption("Default Auto", new ExampleCommand());
     // chooser.addOption("My Auto", new MyAutoCommand());
     SmartDashboard.putData("Auto mode", m_chooser);
@@ -60,7 +88,7 @@ public class Example extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
-    
+    hatchID.whenReleased(hatchPiston.Piston.toggle()); 
   }
 
   /**
@@ -129,7 +157,6 @@ public class Example extends TimedRobot {
    */
   @Override
   public void teleopPeriodic() {
-    PistonToggle.PistonToggle.
     Scheduler.getInstance().run();
   }
 
