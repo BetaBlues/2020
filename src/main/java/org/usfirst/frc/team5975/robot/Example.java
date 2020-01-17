@@ -88,7 +88,7 @@ public class Example extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
-    hatchID.whenReleased(hatchPiston.Piston.toggle()); 
+    //hatchID.whenReleased(hatchPiston.Piston.toggle()); 
   }
 
   /**

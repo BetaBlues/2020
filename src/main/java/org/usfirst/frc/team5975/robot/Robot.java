@@ -121,37 +121,11 @@ public class Robot extends TimedRobot {
 	}
 	
 	public void autonomousPeriodic() {
-
-		double rightAxis = -driveController.getRawAxis(rightStickID);
-		double leftAxis = -driveController.getRawAxis(leftStickID);
-
-		leftAxis = limitAxis(leftAxis);
-		rightAxis = limitAxis(rightAxis);
-		
-		leftAxis = limitSpeed(leftAxis);
-		rightAxis = limitSpeed(rightAxis);
-		
-		myRobot.tankDrive(leftAxis, rightAxis);
-		
-		togglePiston(frontLegsID, frontLegs);
-		togglePiston(hatchID, hatchPiston);
-		togglePiston(backLegsID, backLegs);
-		limelight(limelightID);
-		linearMotion(linearMotionID);
-		sandstormStart(sandstormStartID);
-
-		slowSpeedButton(slowSpeedButtonID);
-		SmartDashboard.putNumber("time since piston last used",
-								 (System.currentTimeMillis()-lastCompresserUseTime)/1000);
-		if(((System.currentTimeMillis()-lastCompresserUseTime)/1000)<=5){
-			SmartDashboard.putString("compressor power", "low");
+		autoStart();
+		if (sandstormStartState){
+			autoTurn(.2);
 		}
-		else if(((System.currentTimeMillis()-lastCompresserUseTime)/1000)<=8){
-			SmartDashboard.putString("compressor power", "medium");
-		}
-		else if(((System.currentTimeMillis()-lastCompresserUseTime)/1000)>10){
-			SmartDashboard.putString("compressor power", "high");
-		}
+
 	}
 	
 	
@@ -160,7 +134,7 @@ public class Robot extends TimedRobot {
 		gyro.reset();
 		hatchMotorEncoder.reset();
 		linearMotionState = false;
-		runTime = 90;
+		runTime = 190;
 		sandstormStartState = false;
 		//boolean pistonForward = false;
 	}
@@ -183,7 +157,6 @@ public class Robot extends TimedRobot {
 		togglePiston(backLegsID, backLegs);
 		limelight(limelightID);
 		linearMotion(linearMotionID);
-		sandstormStart(sandstormStartID);
 
 		slowSpeedButton(slowSpeedButtonID);
 		SmartDashboard.putNumber("time since piston last used",
@@ -308,20 +281,22 @@ public class Robot extends TimedRobot {
 		i = 0;
 	}
 
-	public void sandstormStart(int buttonID){
+	public void autoStart(){
 		double angle = gyro.getAngle();
 	
 		System.out.println("runTime " + runTime);
 		System.out.println(angle%360);
 		SmartDashboard.putNumber("Gyro", angle%360);
-	
+	/*
 		if (driveController.getRawButtonReleased(buttonID)){
 			sandstormStartState = true;
 		}
-	
-		if (runTime!=0 && sandstormStartState){
-			myRobot.arcadeDrive(.5, -angle*KpG); // drive towards heading 0, 0.2 probably slowest possible to run 
+	*/
+		if (runTime!=0){
+			myRobot.arcadeDrive(.6, -angle*KpG); // drive towards heading 0, 0.2 probably slowest possible to run 
 			runTime -= 1;
+		}else{
+			sandstormStartState = true;
 		}
 		
 	}
@@ -334,5 +309,13 @@ public class Robot extends TimedRobot {
 		
 		}	
 	}
+	public void autoTurn(double speed){
+		double angle = gyro.getAngle();
+		if ((272 <= angle) || (angle <= 267)){
+			myRobot.arcadeDrive(speed,-(angle+90)*0.01); 
+		}
+		
+	}
+	
 }
 
