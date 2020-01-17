@@ -13,7 +13,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 
 
 
-
 public class Robot extends TimedRobot {
 	
 	public Gyro gyro;
@@ -58,8 +57,12 @@ public class Robot extends TimedRobot {
 	double mediumSpeed = 0.3;
 	double highSpeed = 0.6;
 
+	int runTime = 0;
+	int angleTurn = 270;
+	double kpg2 = 0.1;
+
 	public void robotInit() {
-		gyro = new ADXRS450_Gyro(); // Gyro on Analog Channel 1
+		gyro = new ADXRS450_Gyro(); 
 		
 		leftMotor = new Spark(leftMotorChannel);
 		rightMotor = new Spark(rightMotorChannel);
@@ -77,7 +80,6 @@ public class Robot extends TimedRobot {
 	}
 	
 	public void autonomousPeriodic() {
-
 		double rightAxis = -driveController.getRawAxis(rightDriveStick);
 		double leftAxis = -driveController.getRawAxis(leftDriveStick);
 
@@ -89,7 +91,31 @@ public class Robot extends TimedRobot {
 		
 		myRobot.tankDrive(leftAxis, rightAxis);
 
-		//slowSpeedButton(slowSpeedButtonID);
+		double angle = gyro.getAngle();
+
+		System.out.println("runTime " + runTime);
+		System.out.println(angle%360);
+		SmartDashboard.putNumber("Gyro", angle%360);
+		//myRobot.arcadeDrive(0.2,-(angle*KpG)); 
+		auto(lowSpeed);
+/*
+		if (runTime <= 100){
+			myRobot.arcadeDrive(0.2,-(angle+180)*0.01); 
+			runTime += 1;
+		}else{
+			if ((272 <= angle) || (angle <= 267)){
+				myRobot.arcadeDrive(.1,-(angle+90)*0.01); 
+			}else{
+				myRobot.arcadeDrive(0,0);
+			}
+
+		}
+
+		//myRobot.arcadeDrive(.3, -(angle)*0.01);
+
+		*/
+		
+		
 	}
 	
 	
@@ -141,6 +167,28 @@ public class Robot extends TimedRobot {
 			myRobot.arcadeDrive(lowSpeed, -angle*KpG); 
 		
 		}	
+	}
+
+	public void countdown(int runTime){
+		runTime -= 1;
+	}
+
+	public void auto(double speed){
+		double angle =gyro.getAngle();
+		if (runTime <= 100){
+			myRobot.tankDrive(.3,.3); 
+			runTime += 1;
+		}else{
+			if ((272 <= angle) || (angle <= 267)){
+				myRobot.arcadeDrive(speed,-(angle+90)*0.01); 
+			}else{
+				//myRobot.arcadeDrive(0,0);
+			}
+
+		}
+
+		//myRobot.arcadeDrive(.3, -(angle)*0.01);
+
 	}
 }
 
