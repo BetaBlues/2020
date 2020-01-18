@@ -77,24 +77,19 @@ public class Robot extends TimedRobot {
 	}
 	
 	public void autonomousPeriodic() {
-
-		double rightAxis = -driveController.getRawAxis(rightDriveStick);
-		double leftAxis = -driveController.getRawAxis(leftDriveStick);
-
-		leftAxis = limitAxis(leftAxis);
-		rightAxis = limitAxis(rightAxis);
-		
-		leftAxis = limitSpeed(leftAxis);
-		rightAxis = limitSpeed(rightAxis);
-		
-		myRobot.tankDrive(leftAxis, rightAxis);
-
-		//slowSpeedButton(slowSpeedButtonID);
+		autoStart();
+		if (sandstormStartState){
+			autoTurn(.2);
 	}
 	
 	
 	public void teleopInit() {
 		gyro.reset();
+		hatchMotorEncoder.reset();
+		linearMotionState = false;
+		runTime = 190;
+		sandstormStartState = false;
+		//boolean pistonForward = false;
 	}
 	
 	public void teleopPeriodic() {
@@ -109,6 +104,12 @@ public class Robot extends TimedRobot {
 		rightAxis = limitSpeed(rightAxis);
 		
 		myRobot.tankDrive(leftAxis, rightAxis);
+		
+		togglePiston(frontLegsID, frontLegs);
+		togglePiston(hatchID, hatchPiston);
+		togglePiston(backLegsID, backLegs);
+		limelight(limelightID);
+		linearMotion(linearMotionID);
 
 		//slowSpeedButton(slowSpeedButtonID);
 	}
@@ -134,6 +135,114 @@ public class Robot extends TimedRobot {
 		return axis;
 	}
 
+
+	public void togglePiston(int buttonID, Piston pistonn) {
+	
+		if (manipController.getRawButtonReleased(buttonID)){ //if the button has been pressed
+		
+			pistonn.toggle();
+			lastCompresserUseTime = System.currentTimeMillis();
+		}
+	}
+
+	public void linearMotion (int buttonID){
+
+		if (manipController.getRawButtonReleased(buttonID)){
+			if (linearMotionState == true){
+				linearMotionState = false;
+				System.out.println(linearMotionState);
+			}
+			else if (linearMotionState == false){
+				linearMotionState = true;
+				System.out.println(linearMotionState);
+			}
+		}
+
+		if (linearMotionState){
+		/*if ((hatchMotorEncoder.getRaw()) <= 90) {
+				//System.out.println(hatchMotorEncoder.getRaw());
+				//System.out.println(hatchMotorEncoder.getRaw() + "    hatch motor encoder");
+				hatchMotor.set(-0.3); 
+			}else {
+				hatchMotor.set(0.0);
+			}*/
+			hatchMotor.set(-0.3);
+		} else if (linearMotionState==false){
+			/*if ((hatchMotorEncoder.getRaw()) >= 0 ) {
+				System.out.println(hatchMotorEncoder.getRaw());
+				System.out.println(hatchMotorEncoder.getRaw() + "    hatch motor encoder");
+				hatchMotor.set(0.3);
+			}else {
+				hatchMotor.set(0.0);
+			}*/
+			hatchMotor.set(0.3);
+		}
+			
+	}
+	
+		
+	
+	public void limelight (int buttonID) {
+		if (manipController.getRawButton(buttonID)){ //if button has been pressed 
+		
+			NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(1);
+			NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+			NetworkTableEntry tx = table.getEntry("tx");
+			NetworkTableEntry ty = table.getEntry("ty");
+			NetworkTableEntry ta = table.getEntry("ta");
+		
+			//read values periodically
+			double horizonalOffset = tx.getDouble(0.0);
+			double verticalOffset = ty.getDouble(0.0);
+			double targetArea = ta.getDouble(0.0);
+			//double angle = gyro.getAngle();
+		
+			//post to smart dashboard periodically
+			SmartDashboard.putNumber("LimelightX", horizonalOffset);
+			SmartDashboard.putNumber("LimelightY", verticalOffset);
+			SmartDashboard.putNumber("LimelightArea", targetArea);
+		
+			double KpL = -0.03;
+		
+			if (NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getDouble(0)
+			==0.0){
+				myRobot.arcadeDrive(0.0,0.0);
+				if (x){ //"i" and "x" are placeholders
+					if (i < 30){
+						myRobot.arcadeDrive(0.3,0.5);
+						//hatchMotor.set(-0.3);
+						i += 1;
+					}
+					x = false;
+				}
+			}else{
+				myRobot.arcadeDrive(Math.max((((maxSpeed-minSpeed)*((10-targetArea)/5))+minSpeed), minSpeed), -horizonalOffset*KpL);
+			}
+		}
+		x = true;
+		i = 0;
+	}
+
+	public void autoStart(){
+		double angle = gyro.getAngle();
+	
+		System.out.println("runTime " + runTime);
+		System.out.println(angle%360);
+		SmartDashboard.putNumber("Gyro", angle%360);
+	/*
+		if (driveController.getRawButtonReleased(buttonID)){
+			sandstormStartState = true;
+		}
+	*/
+		if (runTime!=0){
+			myRobot.arcadeDrive(.6, -angle*KpG); // drive towards heading 0, 0.2 probably slowest possible to run 
+			runTime -= 1;
+		}else{
+			sandstormStartState = true;
+		}
+		
+	}
+
 	public void slowSpeedButton(int buttonID){
 		double angle = gyro.getAngle();
 	
@@ -142,5 +251,13 @@ public class Robot extends TimedRobot {
 		
 		}	
 	}
+	public void autoTurn(double speed){
+		double angle = gyro.getAngle();
+		if ((272 <= angle) || (angle <= 267)){
+			myRobot.arcadeDrive(speed,-(angle+90)*0.01); 
+		}
+		
+	}
+	
 }
 
