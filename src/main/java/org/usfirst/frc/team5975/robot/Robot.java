@@ -10,34 +10,23 @@ import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.DriverStation;
 
-// Limelight Imports
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
 
-//encoder imports
-//import edu.wpi.first.wpilibj.SendableBase;
-import edu.wpi.first.wpilibj.Encoder;
+
+
 
 public class Robot extends TimedRobot {
 	
 	public Gyro gyro;
 	double KpG = 0.03;
-	boolean x = true;
 	
 	DifferentialDrive myRobot;
 	Spark leftMotor;
 	Spark rightMotor;
-	Spark hatchMotor;
-	Piston frontLegs;
-	Piston hatchPiston;
-	Piston backLegs;
 	//boolean pistonForward;
 	
 	// RoboRio mapping
 	int leftMotorChannel=1;
 	int rightMotorChannel=2;
-	int hatchMotorChannel=0;
 	DriverStation ds = DriverStation.getInstance();
 	
 	// Driver Station / controller mapping
@@ -45,92 +34,56 @@ public class Robot extends TimedRobot {
 	int joyPort2=1; //manipulator xbox controller
 	
 	//Driver Controls
-	int lTriggerID = 2;
-	int rTriggerID = 3;
-	int sandstormStartID = 4;//Y button
-	int slowSpeedButtonID = 3;//X button
-	int leftStickID = 1; //left and right sticks are joysticks (axis)
-	int rightStickID = 5;
+	int leftDriveTrigger = 2;
+	int righDriveTrigger = 3;
+	int yButtonDrive = 4;//Y button
+	int xButtonDrive = 3;//X button
+	int leftDriveStick = 1; //left and right sticks are joysticks (axis)
+	int rightDriveStick = 5;
 	XboxController driveController;
 	XboxController manipController;
 	
 	//Manipulator Controls
-	int limelightID= 2; //B button
-	int hatchID = 3; //X button
-	int linearMotionID = 4; //Y button
-	int frontLegsID = 5; //left Bumper
-	int backLegsID = 6; //right Bumper
+	int bButtonManip = 2; //B button
+	int xButtonManip = 3; //X button
+	int yButtonManip = 4; //Y button
+	int leftBumperManip = 5; //left Bumper
+	int rightBumperManip = 6; //right Bumper
 	//verify that stick1 and stick2 correspond to the left and right joysticks on the controller
 	//6 is right, 5 is left
-	
-	//global variables
-	long lastCompresserUseTime;
-	int turnLimit;
-	//for field pieces, right is true, left is false
-	
+
 	//digital inputs
 	final double speedScalingFactor = 0.9;
 	double lowSpeed = 0.2;
 	double mediumSpeed = 0.3;
 	double highSpeed = 0.6;
-	//Encoder Variables
-	Encoder hatchMotorEncoder;
-	int hatchTurnLimit = 200;
-	int i = 0;
-	boolean linearMotionState;
-	
 
-	boolean limelightButtonState = false;
-
-	double maxSpeed = 0.5; // max speed for the limelight fucntion
-	double minSpeed = 0.3; // min speed for the limelight fuction
-	int runTime; //number of cycles function has gone through
-	
-	boolean sandstormStartState = false; //the state of the button to start sandstorm 
-	
 	public void robotInit() {
 		gyro = new ADXRS450_Gyro(); // Gyro on Analog Channel 1
 		
-		frontLegs = new Piston (0,1, "front legs");
-		backLegs = new Piston (5,4, "back legs");
-		hatchPiston = new Piston (2,3, "hatch");
-
 		leftMotor = new Spark(leftMotorChannel);
 		rightMotor = new Spark(rightMotorChannel);
-		hatchMotor = new Spark(hatchMotorChannel);
 		leftMotor.setInverted(false);
 		rightMotor.setInverted(false);
 		
 		myRobot = new DifferentialDrive(leftMotor,rightMotor);
 		
 		driveController  = new XboxController(joyPort1);
-		manipController = new XboxController(joyPort2);
-		
-		hatchMotorEncoder = new Encoder(7,8); 
-		
+		manipController = new XboxController(joyPort2);	
 	} 
+	
 	public void autonomousInit(){
-		lastCompresserUseTime = System.currentTimeMillis();
 		gyro.reset();
-		hatchMotorEncoder.reset();
-		runTime = 90;
-		sandstormStartState = false;
-		linearMotionState = false;
-
-		//boolean pistonForward = false;
 	}
 	
 	public void autonomousPeriodic() {
 		autoStart();
 		if (sandstormStartState){
 			autoTurn(.2);
-		}
-
 	}
 	
 	
 	public void teleopInit() {
-		lastCompresserUseTime = System.currentTimeMillis();
 		gyro.reset();
 		hatchMotorEncoder.reset();
 		linearMotionState = false;
@@ -141,8 +94,8 @@ public class Robot extends TimedRobot {
 	
 	public void teleopPeriodic() {
 
-		double rightAxis = -driveController.getRawAxis(rightStickID);
-		double leftAxis = -driveController.getRawAxis(leftStickID);
+		double rightAxis = -driveController.getRawAxis(rightDriveStick);
+		double leftAxis = -driveController.getRawAxis(leftDriveStick);
 
 		leftAxis = limitAxis(leftAxis);
 		rightAxis = limitAxis(rightAxis);
@@ -158,18 +111,7 @@ public class Robot extends TimedRobot {
 		limelight(limelightID);
 		linearMotion(linearMotionID);
 
-		slowSpeedButton(slowSpeedButtonID);
-		SmartDashboard.putNumber("time since piston last used",
-								 (System.currentTimeMillis()-lastCompresserUseTime)/1000);
-		if(((System.currentTimeMillis()-lastCompresserUseTime)/1000)<=5){
-			SmartDashboard.putString("compressor power", "low");
-		}
-		else if(((System.currentTimeMillis()-lastCompresserUseTime)/1000)<=8){
-			SmartDashboard.putString("compressor power", "medium");
-		}
-		else if(((System.currentTimeMillis()-lastCompresserUseTime)/1000)>10){
-			SmartDashboard.putString("compressor power", "high");
-		}
+		//slowSpeedButton(slowSpeedButtonID);
 	}
 	
 	private double limitAxis (double axis) {//mess with this so it doesn't go so fast
