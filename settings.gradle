@@ -9,12 +9,12 @@ pluginManagement {
         if (OperatingSystem.current().isWindows()) {
             String publicFolder = System.getenv('PUBLIC')
             if (publicFolder == null) {
-                publicFolder = "C:\\Users\\sma.robot\\Desktop"
+                publicFolder = "C:\\Users\\Public"
             }
-            frcHome = new File(publicFolder, "${frcYear}")
+            frcHome = new File(publicFolder, "frc${frcYear}")
         } else {
             def userFolder = System.getProperty("user.home")
-            frcHome = new File(userFolder, "${frcYear}")
+            frcHome = new File(userFolder, "frc${frcYear}")
         }
         def frcHomeMaven = new File(frcHome, 'maven')
         maven {
