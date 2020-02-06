@@ -21,7 +21,7 @@ import java.util.ArrayList;
 
 import edu.wpi.first.wpilibj.util.Color;
 import com.revrobotics.ColorSensorV3;
-import org.usfirst.frc.team5975.robot.subsystems.links.UARTLink;
+//import org.usfirst.frc.team5975.robot.subsystems.links.UARTLink;
 
 import com.revrobotics.ColorMatchResult;
 import com.revrobotics.ColorMatch;
@@ -59,6 +59,8 @@ public class Robot extends TimedRobot {
 	Spark leftMotor;
 	Spark rightMotor;
 	Spark hatchMotor;
+	Spark armMotor;
+	Spark wheelMotor;
 	Piston frontLegs;
 	Piston hatchPiston;
 	Piston backLegs;
@@ -68,6 +70,8 @@ public class Robot extends TimedRobot {
 	// RoboRio mapping
 	int leftMotorChannel=1;
 	int rightMotorChannel=2;
+	int armMotorChannel=3;
+	int wheelMotorChannel=4;
 	//int hatchMotorChannel=0;
 	DriverStation ds = DriverStation.getInstance();
 	
@@ -82,6 +86,7 @@ public class Robot extends TimedRobot {
 	int slowSpeedButtonID = 3;//X button
 	int leftStickID = 1; //left and right sticks are joysticks (axis)
 	int rightStickID = 5;
+	int armStickID = 1;
 	XboxController driveController;
 	XboxController manipController;
 	
@@ -139,7 +144,10 @@ public class Robot extends TimedRobot {
     private final Color kRedTarget = ColorMatch.makeColor(0.561, 0.232, 0.114);
 	private final Color kYellowTarget = ColorMatch.makeColor(0.361, 0.524, 0.113);
 
-
+	private final Color fakeRedTarget = ColorMatch.makeColor(0.143, 0.427, 0.429);
+	private final Color fakeYellowTarget = ColorMatch.makeColor(0.197, 0.561, 0.240);
+	private final Color fakeBlueTarget = ColorMatch.makeColor(0.561, 0.232, 0.114);
+	private final Color fakeGreenTarget = ColorMatch.makeColor(0.361, 0.524, 0.113);
 	
 	public void robotInit() {
 		//gyro = new ADXRS450_Gyro(); // Gyro on Analog Channel 1
@@ -151,10 +159,11 @@ public class Robot extends TimedRobot {
 
 		leftMotor = new Spark(leftMotorChannel);
 		rightMotor = new Spark(rightMotorChannel);
+		armMotor = new Spark(armMotorChannel);
 		//hatchMotor = new Spark(hatchMotorChannel);
 		leftMotor.setInverted(false);
 		rightMotor.setInverted(false);
-		
+		armMotor.setInverted(false);
 		myRobot = new DifferentialDrive(leftMotor,rightMotor);
 		
 		driveController  = new XboxController(joyPort1);
@@ -239,17 +248,20 @@ public class Robot extends TimedRobot {
 
 		double rightAxis = -driveController.getRawAxis(rightStickID);
 		double leftAxis = -driveController.getRawAxis(leftStickID);
-
+		double armAxis = -manipController.getRawAxis(armStickID);
 		//switchTest(); //which channels?
 
 		leftAxis = limitAxis(leftAxis);
 		rightAxis = limitAxis(rightAxis);
-		
+		armAxis = limitAxis(armAxis);
+
 		leftAxis = limitSpeed(leftAxis);
 		rightAxis = limitSpeed(rightAxis);
-		
+		armAxis = limitSpeed(armAxis);
+
 		myRobot.tankDrive(leftAxis, rightAxis);
-		
+		armMotor.set(armAxis);
+
 		togglePiston(frontLegsID, frontLegs);
 		togglePiston(hatchID, hatchPiston);
 		togglePiston(backLegsID, backLegs);
@@ -440,5 +452,26 @@ public class Robot extends TimedRobot {
 	//	CameraServer.getInstance().startAutomaticCapture().getVideoMode();
 
 	//}
+
+	public void findColor(int buttonID, Color target) {
+		
+		m_colorMatcher.addColorMatch(fakeRedTarget);
+		m_colorMatcher.addColorMatch(fakeYellowTarget);
+		m_colorMatcher.addColorMatch(fakeBlueTarget);
+		m_colorMatcher.addColorMatch(fakeGreenTarget); 
+
+		Color detectedColor = m_colorSensor.getColor();
+   		String colorString;
+    	ColorMatchResult match = m_colorMatcher.matchClosestColor(detectedColor);	
+		if (manipController.getRawButtonReleased(buttonID)){ 
+			if (target != match.color) {
+				wheelMotor.set(.3);
+
+			}else{
+				wheelMotor.set(0.0);
+			}
+
+		}
+	}
 }
 

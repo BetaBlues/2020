@@ -52,13 +52,7 @@ dependencies {
     nativeDesktopZip wpi.deps.vendor.jni(wpi.platforms.desktop)
     testCompile 'junit:junit:4.12'
     
-   /* implementation 'pw.otake.pseudoresonance:pixy2-java-api:1.3.5'
-    implementation wpi.deps.wpilib()
-    nativeZip wpi.deps.wpilibJni(wpi.platforms.roborio)
-    nativeDesktopZip wpi.deps.wpilibJni(wpi.platforms.desktop)
-    implementation wpi.deps.vendor.java()
-    testImplementation 'junit:junit:4.12'
-    simulation wpi.deps.sim.gui(wpi.platforms.desktop, false)*/
+  
 }
 
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
