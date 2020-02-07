@@ -10,6 +10,8 @@ import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.DriverStation;
 
+import static org.junit.Assume.assumeFalse;
+
 //import org.usfirst.frc.team5975.robot.subsystems.Pixy2;
 //import org.usfirst.frc.team5975.robot.subsystems.Pixy2.LinkType;
 //import org.usfirst.frc.team5975.robot.subsystems.links.Link;
@@ -149,6 +151,13 @@ public class Robot extends TimedRobot {
 	private final Color fakeBlueTarget = ColorMatch.makeColor(0.561, 0.232, 0.114);
 	private final Color fakeGreenTarget = ColorMatch.makeColor(0.361, 0.524, 0.113);
 	
+	int colorCounter =0 ;
+	boolean yellowState = false;
+	boolean redState = false;
+	boolean greenState = false;
+	boolean blueState = false;
+
+
 	public void robotInit() {
 		//gyro = new ADXRS450_Gyro(); // Gyro on Analog Channel 1
 		
@@ -208,7 +217,7 @@ public class Robot extends TimedRobot {
 	
     SmartDashboard.putNumber("Red", detectedColor.red);
     SmartDashboard.putNumber("Green", detectedColor.green);
-    SmartDashboard.putNumber("Blue", detectedColor.blue);
+	SmartDashboard.putNumber("Blue", detectedColor.blue);
     SmartDashboard.putNumber("Confidence", match.confidence);
 	SmartDashboard.putString("Detected Color", colorString);
 	
@@ -471,6 +480,44 @@ public class Robot extends TimedRobot {
 				wheelMotor.set(0.0);
 			}
 
+		}
+	}
+	public void turnWheel(int buttonID, Color target) {
+		Color detectedColor = m_colorSensor.getColor();
+    	String colorString;
+   		ColorMatchResult match = m_colorMatcher.matchClosestColor(detectedColor);
+		if (colorCounter <32) {
+			if (match.color == kBlueTarget && blueState == false){
+				colorCounter +=1;
+				blueState=true;
+				redState=false;
+				yellowState=false;
+				greenState=false;
+			}
+			else if (match.color == kRedTarget && redState == false){
+				colorCounter +=1;
+				redState=true;
+				blueState=false;
+				yellowState=false;
+				greenState=false;
+			}
+			else if (match.color == kGreenTarget && greenState == false){
+				colorCounter +=1;
+				greenState=true;
+				redState=false;
+				yellowState=false;
+				blueState=false;
+			}
+			else if (match.color == kYellowTarget && yellowState == false){
+				colorCounter +=1;
+				yellowState=true;
+				redState=false;
+				blueState=false;
+				greenState=false;
+			}
+			wheelMotor.set(.3);
+		}else{
+			wheelMotor.set(.0);
 		}
 	}
 }
