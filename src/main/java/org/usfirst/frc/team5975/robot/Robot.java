@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.DriverStation;
 
-import static org.junit.Assume.assumeFalse;
+
 
 //import org.usfirst.frc.team5975.robot.subsystems.Pixy2;
 //import org.usfirst.frc.team5975.robot.subsystems.Pixy2.LinkType;
