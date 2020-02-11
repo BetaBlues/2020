@@ -10,29 +10,6 @@ import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.DriverStation;
 
-
-
-//import org.usfirst.frc.team5975.robot.subsystems.Pixy2;
-//import org.usfirst.frc.team5975.robot.subsystems.Pixy2.LinkType;
-//import org.usfirst.frc.team5975.robot.subsystems.links.Link;
-//import org.usfirst.frc.team5975.robot.subsystems.links.SPILink;
-//import edu.wpi.first.wpilibj.CameraServer;
-
-import java.lang.Math;
-import java.util.ArrayList;
-
-import edu.wpi.first.wpilibj.util.Color;
-import com.revrobotics.ColorSensorV3;
-//import org.usfirst.frc.team5975.robot.subsystems.links.UARTLink;
-
-import com.revrobotics.ColorMatchResult;
-import com.revrobotics.ColorMatch;
-import edu.wpi.first.wpilibj.I2C;
-
-
-
-import edu.wpi.first.wpilibj.util.ColorShim;
-
 // Limelight Imports
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
@@ -43,17 +20,10 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Encoder;
 
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.DigitalSource; 
-
-//import org.usfirst.frc.team5975.robot.subsystems.Camera;
-
-//import edu.wpi.cscore.UsbCamera;
-//import edu.wpi.first.cameraserver.CameraServer; //seems like it can't exist with import edu.wpi.first.wpilibj.CameraServer;
-//import edu.wpi.cscore.VideoSource;
 
 public class Robot extends TimedRobot {
 	
-	//public Gyro gyro;
+	public Gyro gyro;
 	double KpG = 0.03;
 	boolean x = true;
 	
@@ -61,20 +31,15 @@ public class Robot extends TimedRobot {
 	Spark leftMotor;
 	Spark rightMotor;
 	Spark hatchMotor;
-	Spark armMotor;
-	Spark wheelMotor;
 	Piston frontLegs;
 	Piston hatchPiston;
 	Piston backLegs;
-	Piston hook;
 	//boolean pistonForward;
 	
 	// RoboRio mapping
 	int leftMotorChannel=1;
 	int rightMotorChannel=2;
-	int armMotorChannel=3;
-	int wheelMotorChannel=4;
-	//int hatchMotorChannel=0;
+	int hatchMotorChannel=0;
 	DriverStation ds = DriverStation.getInstance();
 	
 	// Driver Station / controller mapping
@@ -88,7 +53,6 @@ public class Robot extends TimedRobot {
 	int slowSpeedButtonID = 3;//X button
 	int leftStickID = 1; //left and right sticks are joysticks (axis)
 	int rightStickID = 5;
-	int armStickID = 1;
 	XboxController driveController;
 	XboxController manipController;
 	
@@ -98,7 +62,6 @@ public class Robot extends TimedRobot {
 	int linearMotionID = 4; //Y button
 	int frontLegsID = 5; //left Bumper
 	int backLegsID = 6; //right Bumper
-	int hookID = 1; //a button (probably)
 	//verify that stick1 and stick2 correspond to the left and right joysticks on the controller
 	//6 is right, 5 is left
 	
@@ -121,115 +84,46 @@ public class Robot extends TimedRobot {
 	DigitalInput m_aSource;
 	DigitalInput m_bSource;
 
-	
+
 	boolean limelightButtonState = false;
 
 	double maxSpeed = 0.5; // max speed for the limelight fucntion
 	double minSpeed = 0.3; // min speed for the limelight fuction
 	int runTime; //number of cycles function has gone through
 	
-
-	//Link link = new UARTLink();
 	boolean sandstormStartState = false; //the state of the button to start sandstorm 
 
-	// Pixy2 pixy;
-
-	I2C.Port i2cPort = I2C.Port.kOnboard;
-	//UsbCamera camera1;
-	//NetworkTableEntry cameraSelection;
- 	private final ColorSensorV3 m_colorSensor = new ColorSensorV3(i2cPort);
-
-	private final ColorMatch m_colorMatcher = new ColorMatch();
-
-    private final Color kBlueTarget = ColorMatch.makeColor(0.143, 0.427, 0.429);
-    private final Color kGreenTarget = ColorMatch.makeColor(0.197, 0.561, 0.240);
-    private final Color kRedTarget = ColorMatch.makeColor(0.561, 0.232, 0.114);
-	private final Color kYellowTarget = ColorMatch.makeColor(0.361, 0.524, 0.113);
-
-	private final Color fakeRedTarget = ColorMatch.makeColor(0.143, 0.427, 0.429);
-	private final Color fakeYellowTarget = ColorMatch.makeColor(0.197, 0.561, 0.240);
-	private final Color fakeBlueTarget = ColorMatch.makeColor(0.561, 0.232, 0.114);
-	private final Color fakeGreenTarget = ColorMatch.makeColor(0.361, 0.524, 0.113);
 	
-	int colorCounter =0 ;
-	boolean yellowState = false;
-	boolean redState = false;
-	boolean greenState = false;
-	boolean blueState = false;
-
-
+	
 	public void robotInit() {
-		//gyro = new ADXRS450_Gyro(); // Gyro on Analog Channel 1
+		gyro = new ADXRS450_Gyro(); // Gyro on Analog Channel 1
 		
 		frontLegs = new Piston (0,1, "front legs");
 		backLegs = new Piston (5,4, "back legs");
 		hatchPiston = new Piston (2,3, "hatch");
-		hook = new Piston (6,7, "hook");
 
 		leftMotor = new Spark(leftMotorChannel);
 		rightMotor = new Spark(rightMotorChannel);
-		armMotor = new Spark(armMotorChannel);
-		//hatchMotor = new Spark(hatchMotorChannel);
+		hatchMotor = new Spark(hatchMotorChannel);
 		leftMotor.setInverted(false);
 		rightMotor.setInverted(false);
-		armMotor.setInverted(false);
+		
 		myRobot = new DifferentialDrive(leftMotor,rightMotor);
 		
 		driveController  = new XboxController(joyPort1);
 		manipController = new XboxController(joyPort2);
 		
-		hatchMotorEncoder = new Encoder(3,4, false, Encoder.EncodingType.k4X); 
-
-		//Pixy2 pixy = Pixy2.createInstance(link);
-		//pixy.init();
-		//m_aSource = new DigitalInput(3);
-		//m_bSource = new DigitalInput(4);
-
-		//camera1 = CameraServer.getInstance().startAutomaticCapture(1);
-		//cameraSelection = NetworkTableInstance.getDefault().getTable("").getEntry("CameraSelection");
-		//pixy.getVideo();
-		//CameraServer.getInstance().startAutomaticCapture();
-		
-		m_colorMatcher.addColorMatch(kBlueTarget);
-		m_colorMatcher.addColorMatch(kGreenTarget);
-		m_colorMatcher.addColorMatch(kRedTarget);
-		m_colorMatcher.addColorMatch(kYellowTarget);  
+		hatchMotorEncoder = new Encoder(7,8); 
 		
 	} 
-
-	public void robotPeriodic(){
-		Color detectedColor = m_colorSensor.getColor();
-
-    String colorString;
-    ColorMatchResult match = m_colorMatcher.matchClosestColor(detectedColor);
-		
-    if (match.color == kBlueTarget) {
-      colorString = "Blue";
-    } else if (match.color == kRedTarget) {
-      colorString = "Red";
-    } else if (match.color == kGreenTarget) {
-      colorString = "Green";
-    } else if (match.color == kYellowTarget) {
-      colorString = "Yellow";
-    } else {
-      colorString = "Unknown";
-    }
-	
-    SmartDashboard.putNumber("Red", detectedColor.red);
-    SmartDashboard.putNumber("Green", detectedColor.green);
-	SmartDashboard.putNumber("Blue", detectedColor.blue);
-    SmartDashboard.putNumber("Confidence", match.confidence);
-	SmartDashboard.putString("Detected Color", colorString);
-	
-	}
-	
 	public void autonomousInit(){
 		lastCompresserUseTime = System.currentTimeMillis();
-		//gyro.reset();
+		gyro.reset();
 		hatchMotorEncoder.reset();
 		runTime = 90;
 		sandstormStartState = false;
 		linearMotionState = false;
+
 		//boolean pistonForward = false;
 	}
 	
@@ -244,39 +138,34 @@ public class Robot extends TimedRobot {
 	
 	public void teleopInit() {
 		lastCompresserUseTime = System.currentTimeMillis();
-		//gyro.reset();
+		gyro.reset();
 		hatchMotorEncoder.reset();
-		hatchMotorEncoder.setDistancePerPulse(0.5*3.14/1024);
 		linearMotionState = false;
 		runTime = 190;
 		sandstormStartState = false;
-		boolean pistonForward = false;
+		//boolean pistonForward = false;
 	}
 	
 	public void teleopPeriodic() {
 
 		double rightAxis = -driveController.getRawAxis(rightStickID);
 		double leftAxis = -driveController.getRawAxis(leftStickID);
-		double armAxis = -manipController.getRawAxis(armStickID);
-		//switchTest(); //which channels?
+
+		switchTest(1, 2); //which channels?
 
 		leftAxis = limitAxis(leftAxis);
 		rightAxis = limitAxis(rightAxis);
-		armAxis = limitAxis(armAxis);
-
+		
 		leftAxis = limitSpeed(leftAxis);
 		rightAxis = limitSpeed(rightAxis);
-		armAxis = limitSpeed(armAxis);
-
+		
 		myRobot.tankDrive(leftAxis, rightAxis);
-		armMotor.set(armAxis);
-
+		
 		togglePiston(frontLegsID, frontLegs);
 		togglePiston(hatchID, hatchPiston);
 		togglePiston(backLegsID, backLegs);
-		togglePiston(hookID, hook);
 		limelight(limelightID);
-		//linearMotion(linearMotionID);
+		linearMotion(linearMotionID);
 
 		slowSpeedButton(slowSpeedButtonID);
 		SmartDashboard.putNumber("time since piston last used",
@@ -289,21 +178,7 @@ public class Robot extends TimedRobot {
 		}
 		else if(((System.currentTimeMillis()-lastCompresserUseTime)/1000)>10){
 			SmartDashboard.putString("compressor power", "high");
-			
 		}
-		//NetworkTableInstance.create();
-		System.out.println("hatchMotorEncoder.get()");
-		System.out.println(hatchMotorEncoder.get());
-		System.out.println(hatchMotorEncoder.getDistance());
-		//SmartDashboard.put(pixy.getVideo());
-		//pixy.getVideo();
-
-		System.out.println("Setting camera 1");
-		//cameraSelection.setString(camera1.getName());
-	
-
-		//NetworkTableInstance.getDefault().getTable("USB Camera 0");
-		//NetworkTable tables = NetworkTableInstance.getDefault().getTable("USB Camera 0");
 	}
 	
 	private double limitAxis (double axis) {//mess with this so it doesn't go so fast
@@ -351,26 +226,25 @@ public class Robot extends TimedRobot {
 		}
 
 		if (linearMotionState){
-		if ((hatchMotorEncoder.getRaw()) <= 90) {
+		/*if ((hatchMotorEncoder.getRaw()) <= 90) {
 				//System.out.println(hatchMotorEncoder.getRaw());
-				System.out.println(hatchMotorEncoder.getRaw() + "    hatch motor encoder");
-				//hatchMotor.set(-0.3); 
+				//System.out.println(hatchMotorEncoder.getRaw() + "    hatch motor encoder");
+				hatchMotor.set(-0.3); 
 			}else {
-				//hatchMotor.set(0.0);
-			}
-			//hatchMotor.set(-0.3);
+				hatchMotor.set(0.0);
+			}*/
+			hatchMotor.set(-0.3);
 		} else if (linearMotionState==false){
-			if ((hatchMotorEncoder.getRaw()) >= 0 ) {
+			/*if ((hatchMotorEncoder.getRaw()) >= 0 ) {
 				System.out.println(hatchMotorEncoder.getRaw());
 				System.out.println(hatchMotorEncoder.getRaw() + "    hatch motor encoder");
-				//hatchMotor.set(0.3);
+				hatchMotor.set(0.3);
 			}else {
-				//hatchMotor.set(0.0);
-			}
-			//hatchMotor.set(0.3);
+				hatchMotor.set(0.0);
+			}*/
+			hatchMotor.set(0.3);
 		}
-		
-	
+			
 	}
 	
 		
@@ -417,16 +291,18 @@ public class Robot extends TimedRobot {
 	}
 
 	public void autoStart(){
-		//double angle = gyro.getAngle();
+		double angle = gyro.getAngle();
 	
 		System.out.println("runTime " + runTime);
+		System.out.println(angle%360);
+		SmartDashboard.putNumber("Gyro", angle%360);
 	/*
 		if (driveController.getRawButtonReleased(buttonID)){
 			sandstormStartState = true;
 		}
 	*/
 		if (runTime!=0){
-			//myRobot.arcadeDrive(.6, -angle*KpG); // drive towards heading 0, 0.2 probably slowest possible to run 
+			myRobot.arcadeDrive(.6, -angle*KpG); // drive towards heading 0, 0.2 probably slowest possible to run 
 			runTime -= 1;
 		}else{
 			sandstormStartState = true;
@@ -435,90 +311,25 @@ public class Robot extends TimedRobot {
 	}
 
 	public void slowSpeedButton(int buttonID){
-		//double angle = gyro.getAngle();
+		double angle = gyro.getAngle();
 	
-		//if (driveController.getRawButtonPressed(buttonID)){
-			//myRobot.arcadeDrive(lowSpeed, -angle*KpG); 
+		if (driveController.getRawButtonPressed(buttonID)){
+			myRobot.arcadeDrive(lowSpeed, -angle*KpG); 
 		
-		//}	
+		}	
 	}
 	
 	public void autoTurn(double speed){
-		//double angle = gyro.getAngle();
-		//if ((272 <= angle) || (angle <= 267)){
-			//myRobot.arcadeDrive(speed,-(angle+90)*0.01); 
-		//}
-		
-	}
-	public void switchTest() {
-		System.out.println("m_aSource.get()");
-		System.out.println(m_aSource.get());
-		System.out.println("m_bSource.get()");
-		System.out.println(m_bSource.get());
-		
-	}
-	//public void pixyCam(){
-	//	CameraServer.getInstance().startAutomaticCapture().getVideoMode();
-
-	//}
-
-	public void findColor(int buttonID, Color target) {
-		
-		m_colorMatcher.addColorMatch(fakeRedTarget);
-		m_colorMatcher.addColorMatch(fakeYellowTarget);
-		m_colorMatcher.addColorMatch(fakeBlueTarget);
-		m_colorMatcher.addColorMatch(fakeGreenTarget); 
-
-		Color detectedColor = m_colorSensor.getColor();
-   		String colorString;
-    	ColorMatchResult match = m_colorMatcher.matchClosestColor(detectedColor);	
-		if (manipController.getRawButtonReleased(buttonID)){ 
-			if (target != match.color) {
-				wheelMotor.set(.3);
-
-			}else{
-				wheelMotor.set(0.0);
-			}
-
+		double angle = gyro.getAngle();
+		if ((272 <= angle) || (angle <= 267)){
+			myRobot.arcadeDrive(speed,-(angle+90)*0.01); 
 		}
+		
 	}
-	public void turnWheel(int buttonID, Color target) {
-		Color detectedColor = m_colorSensor.getColor();
-    	String colorString;
-   		ColorMatchResult match = m_colorMatcher.matchClosestColor(detectedColor);
-		if (colorCounter <32) {
-			if (match.color == kBlueTarget && blueState == false){
-				colorCounter +=1;
-				blueState=true;
-				redState=false;
-				yellowState=false;
-				greenState=false;
-			}
-			else if (match.color == kRedTarget && redState == false){
-				colorCounter +=1;
-				redState=true;
-				blueState=false;
-				yellowState=false;
-				greenState=false;
-			}
-			else if (match.color == kGreenTarget && greenState == false){
-				colorCounter +=1;
-				greenState=true;
-				redState=false;
-				yellowState=false;
-				blueState=false;
-			}
-			else if (match.color == kYellowTarget && yellowState == false){
-				colorCounter +=1;
-				yellowState=true;
-				redState=false;
-				blueState=false;
-				greenState=false;
-			}
-			wheelMotor.set(.3);
-		}else{
-			wheelMotor.set(.0);
-		}
+	public void switchTest(int channelA, int channelB) {
+		m_aSource = new DigitalInput(channelA);
+  		m_bSource = new DigitalInput(channelB);
 	}
+	
 }
 
