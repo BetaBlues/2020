@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.cameraserver.CameraServer;
 
 
 
@@ -42,7 +43,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 
 //import org.usfirst.frc.team5975.robot.subsystems.Camera;
 
-//import edu.wpi.cscore.UsbCamera;
+import edu.wpi.cscore.UsbCamera;
 //import edu.wpi.first.cameraserver.CameraServer; //seems like it can't exist with import edu.wpi.first.wpilibj.CameraServer;
 //import edu.wpi.cscore.VideoSource;
 
@@ -68,7 +69,7 @@ public class Robot extends TimedRobot {
 	int leftMotorChannel=1;
 	int rightMotorChannel=2;
 	int armMotorChannel=3;
-	int wheelMotorChannel=4;
+	int wheelMotorChannel=0;
 	//int hatchMotorChannel=0;
 	DriverStation ds = DriverStation.getInstance();
 	
@@ -115,6 +116,7 @@ public class Robot extends TimedRobot {
 	
 	DigitalInput m_aSource;
 	DigitalInput m_bSource;
+	DigitalInput armSwitch;
 
 	
 	boolean limelightButtonState = false;
@@ -130,8 +132,9 @@ public class Robot extends TimedRobot {
 	// Pixy2 pixy;
 
 	I2C.Port i2cPort = I2C.Port.kOnboard;
-	//UsbCamera camera1;
-	//NetworkTableEntry cameraSelection;
+	UsbCamera camera1;
+	CameraServer server;
+	NetworkTableEntry cameraSelection;
  	private final ColorSensorV3 m_colorSensor = new ColorSensorV3(i2cPort);
 
 	private final ColorMatch m_colorMatcher = new ColorMatch();
@@ -146,6 +149,7 @@ public class Robot extends TimedRobot {
 	private final Color fakeBlueTarget = ColorMatch.makeColor(0.561, 0.232, 0.114);
 	private final Color fakeGreenTarget = ColorMatch.makeColor(0.361, 0.524, 0.113);
 	
+	//public boolean setVideoMode(camera1, PixelFormat pixelformat, int width, int height, int fps);
 	int colorCounter =0 ;
 	boolean yellowState = false;
 	boolean redState = false;
@@ -175,10 +179,8 @@ public class Robot extends TimedRobot {
 		
 		hatchMotorEncoder = new Encoder(3,4, false, Encoder.EncodingType.k4X); 
 
-		//Pixy2 pixy = Pixy2.createInstance(link);
-		//pixy.init();
-		//m_aSource = new DigitalInput(3);
-		//m_bSource = new DigitalInput(4);
+		
+		armSwitch = new DigitalInput(2); 
 
 		//camera1 = CameraServer.getInstance().startAutomaticCapture(1);
 		//cameraSelection = NetworkTableInstance.getDefault().getTable("").getEntry("CameraSelection");
@@ -189,6 +191,11 @@ public class Robot extends TimedRobot {
 		m_colorMatcher.addColorMatch(kGreenTarget);
 		m_colorMatcher.addColorMatch(kRedTarget);
 		m_colorMatcher.addColorMatch(kYellowTarget);  
+
+		//camera1 = new UsbCamera("Usb Camera", 0);
+
+		server = CameraServer.getInstance();
+   		server.startAutomaticCapture();
 		
 	} 
 
@@ -215,7 +222,9 @@ public class Robot extends TimedRobot {
 	SmartDashboard.putNumber("Blue", detectedColor.blue);
     SmartDashboard.putNumber("Confidence", match.confidence);
 	SmartDashboard.putString("Detected Color", colorString);
-	
+	System.out.println("camera setting below direct");
+
+	System.out.println(UsbCamera.enumerateUsbCameras());
 	}
 	
 	public void autonomousInit(){
@@ -253,7 +262,7 @@ public class Robot extends TimedRobot {
 		double rightAxis = -driveController.getRawAxis(rightStickID);
 		double leftAxis = -driveController.getRawAxis(leftStickID);
 		double armAxis = -manipController.getRawAxis(armStickID);
-		//switchTest(); //which channels?
+		// (); //which channels?
 
 		leftAxis = limitAxis(leftAxis);
 		rightAxis = limitAxis(rightAxis);
@@ -264,7 +273,14 @@ public class Robot extends TimedRobot {
 		armAxis = limitSpeed(armAxis);
 
 		myRobot.tankDrive(leftAxis, rightAxis);
-		armMotor.set(armAxis);
+	
+
+		if(armSwitch.get()){
+			armMotor.set(0);
+		}
+		else {
+			armMotor.set(armAxis);
+		}
 
 		togglePiston(frontLegsID, frontLegs);
 		togglePiston(hatchID, hatchPiston);
@@ -290,14 +306,8 @@ public class Robot extends TimedRobot {
 		System.out.println("hatchMotorEncoder.get()");
 		System.out.println(hatchMotorEncoder.get());
 		System.out.println(hatchMotorEncoder.getDistance());
-		//SmartDashboard.put(pixy.getVideo());
-		//pixy.getVideo();
-
-		System.out.println("Setting camera 1");
-		//cameraSelection.setString(camera1.getName());
-	
-
-		//NetworkTableInstance.getDefault().getTable("USB Camera 0");
+		
+		NetworkTableInstance.getDefault().getTable("Usb Camera 1").getEntry("Camera Ubs");
 		//NetworkTable tables = NetworkTableInstance.getDefault().getTable("USB Camera 0");
 	}
 	
