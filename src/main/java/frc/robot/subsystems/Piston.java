@@ -1,10 +1,10 @@
-package org.usfirst.frc.team5975.robot.subsystems;
+package  frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.command.Subsystem;
+//import edu.wpi.first.wpilibj.subsystems;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-public class Piston extends Subsystem{
+public class Piston{
 // make abstract after we're done switching to subsystems
 
     DoubleSolenoid piston;
@@ -34,9 +34,6 @@ public class Piston extends Subsystem{
     
     }
 
-    @Override
-    protected void initDefaultCommand() {
-
-    }
+    
 
 }
