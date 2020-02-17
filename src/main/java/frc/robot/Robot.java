@@ -45,23 +45,22 @@ public class Robot extends TimedRobot {
 	//Driver Controls
 	int lTriggerID = 2;
 	int rTriggerID = 3;
-	int sandstormStartID = 4;//Y button
-	int slowSpeedButtonID = 3;//X button
+	int sandstormStartID = 4;//Y button, not in use
+	int slowSpeedButtonID = 3;//X button, not in usw
 	int leftStickID = 1; //left and right sticks are joysticks (axis)
-	int rightStickID = 5;
-	int armStickID = 1;
+	int rightStickID = 5; 
 	XboxController driveController;
 	XboxController manipController;
 	
 	//Manipulator Controls
-	int limelightID= 2; //B button
-	int hatchID = 3; //X button
-	int linearMotionID = 4; //Y button
-	int frontLegsID = 5; //left Bumper
-	int backLegsID = 6; //right Bumper
-	int hookID = 1; //a button (probably)
+	int hookID = 5; //left trigger
+	int armStickID = 1; 
+	int redID = 2 ; //B button
+	int blueID = 3 ; //X button
+	int greenID = 1; //A button
+	int yellowID = 4; //Y button
 	//verify that stick1 and stick2 correspond to the left and right joysticks on the controller
-	//6 is right, 5 is left
+	//6 is right, 5 is left - bumpers
 	
 	//global variables
 	long lastCompresserUseTime;
@@ -207,6 +206,11 @@ public class Robot extends TimedRobot {
 		}
 
 		togglePiston(hookID, hook);
+
+		findColor(redID, fakeRedTarget);
+		findColor(blueID, fakeBlueTarget);
+		findColor(greenID, fakeGreenTarget);
+		findColor(yellowID, fakeYellowTarget);
 
 		SmartDashboard.putNumber("time since piston last used",
 								 (System.currentTimeMillis()-lastCompresserUseTime)/1000);
