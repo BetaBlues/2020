@@ -1,7 +1,6 @@
 package  frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
-//import edu.wpi.first.wpilibj.subsystems;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Piston{
