@@ -1,23 +1,24 @@
 package frc.robot;
-import frc.robot.subsystems.Piston;
-import edu.wpi.first.wpilibj.ADXRS450_Gyro;
-import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.interfaces.Gyro;
-import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.Spark;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.DriverStation;
+import com.revrobotics.ColorMatch;
+import com.revrobotics.ColorMatchResult;
+import com.revrobotics.ColorSensorV3;
+
+import edu.wpi.cscore.UsbCamera;
 //for the USB Camera set up
 import edu.wpi.first.cameraserver.CameraServer;
-import edu.wpi.first.wpilibj.util.Color;
-import com.revrobotics.ColorSensorV3;
-import com.revrobotics.ColorMatchResult;
-import com.revrobotics.ColorMatch;
-import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.cscore.UsbCamera;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.Spark;
+import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.interfaces.Gyro;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
+import frc.robot.subsystems.Piston;
 
 public class Robot extends TimedRobot {
 	
@@ -30,7 +31,7 @@ public class Robot extends TimedRobot {
 	Spark armMotor;
 	Spark wheelMotor;
 	Piston hook;
-	
+	boolean i;
 	// RoboRio mapping
 	int leftMotorChannel=1;
 	int rightMotorChannel=0;
@@ -107,12 +108,14 @@ public class Robot extends TimedRobot {
 	boolean blueState = false;
 	boolean buttState;
 	boolean buttState2;
+	boolean buttState3;
+	boolean buttState4;
+	boolean buttState5;
 
 	public void robotInit() {
 		gyro = new ADXRS450_Gyro(); // Gyro on Analog Channel 1
-		
+		i = false;
 		hook = new Piston(6,7, "hook");
-
 		leftMotor = new Spark(leftMotorChannel);
 		rightMotor = new Spark(rightMotorChannel);
 		armMotor = new Spark(armMotorChannel);
@@ -214,10 +217,10 @@ public class Robot extends TimedRobot {
 
 
 		togglePiston(hookID, hook);
-		findColor(redID, fakeRedTarget);
-		findColor(blueID, fakeBlueTarget);
-		findColor(greenID, fakeGreenTarget);
-		findColor(yellowID, fakeYellowTarget);
+	//	findColor(redID, kRedTarget, buttState2, "Red");
+	//	findColor(blueID, kBlueTarget, buttState3, "Blue");
+	//	findColor(greenID, kGreenTarget, buttState4, "Green");
+		findColor(yellowID, kYellowTarget, buttState5, "Yellow");
 		turnWheel();
 
 		SmartDashboard.putNumber("time since piston last used",
@@ -296,7 +299,7 @@ public class Robot extends TimedRobot {
 		
 	}
 
-	public void findColor(int buttonID, Color target) {
+	public void findColor(int buttonID, Color target, boolean butt, String colour) {
 		String colorString2;
 		m_colorMatcher2.addColorMatch(kRedTarget);
 		m_colorMatcher2.addColorMatch(kYellowTarget);
@@ -306,32 +309,39 @@ public class Robot extends TimedRobot {
 		Color detectedColor2 = m_colorSensor.getColor();
 		ColorMatchResult match2 = m_colorMatcher2.matchClosestColor(detectedColor2);	
 
+		if (manipController.getRawButtonReleased(buttonID)){
+				buttState3 = true;
+			}
+
+
 		if (match2.color == kBlueTarget) {
 			colorString2 = "Blue";
-			} else if (match2.color == kRedTarget) {
+		} else if (match2.color == kRedTarget) {
 			colorString2 = "Red";
-			} else if (match2.color == kGreenTarget) {
+		} else if (match2.color == kGreenTarget) {
 			colorString2 = "Green";
-			} else if (match2.color == kYellowTarget) {
+		} else if (match2.color == kYellowTarget) {
 			colorString2 = "Yellow";
-			} else {
+		} else {
 			colorString2 = "Unknown";
-			}
-			
-			SmartDashboard.putString("Game sensor reads", colorString2);
-
-		if (manipController.getRawButtonReleased(buttonID)){
-			buttState2 = true;
 		}
-
-		//if ((target == match2.color)&& buttState2) {
-			//wheelMotor.set(0.0);
-
-		if((buttState2) && (target != match2.color)){
+		SmartDashboard.putString("Game sensor reads", colorString2);
+	
+		if((buttState3) && (colorString2 != colour)){
 			wheelMotor.set(0.3);
-		}else{
-				buttState2 = false;
+
 		}
+		if ((colorString2 == colour)) {
+			wheelMotor.set(0.0);
+		}
+		
+		System.out.println("butt");
+		//System.out.println(buttState3);
+		System.out.println("match");
+		System.out.println((colorString2 == colour));
+
+		//System.out.println(i);
+
 	}
 
 	public void turnWheel() {
