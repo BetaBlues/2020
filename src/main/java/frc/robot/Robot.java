@@ -40,8 +40,8 @@ public class Robot extends TimedRobot {
 	DriverStation ds = DriverStation.getInstance();
 	
 	// Driver Station / controller mapping
-	int joyPort1=0; //driver xbox controller
-	int joyPort2=1; //manipulator xbox controller
+	int joyPort1=1; //driver xbox controller
+	int joyPort2=0; //manipulator xbox controller
 	
 	//Driver Controls
 	int lTriggerID = 2;
@@ -56,7 +56,7 @@ public class Robot extends TimedRobot {
 	//Manipulator Controls
 	int hookID = 5; //left bumper
 	int armStickID = 1; //left joystick
-	int wheelStickID = 2; //right joystick
+	int wheelStickID = 5; //right joystick
 	int redID = 2 ; //B button
 	int blueID = 3 ; //X button
 	int greenID = 1; //A button
@@ -90,6 +90,9 @@ public class Robot extends TimedRobot {
 
 	private final ColorMatch m_colorMatcher = new ColorMatch();
 	private final ColorMatch m_colorMatcher2 = new ColorMatch();
+	private final ColorMatch m_colorMatcher3 = new ColorMatch();
+	private final ColorMatch m_colorMatcher4 = new ColorMatch();
+	private final ColorMatch m_colorMatcher5 = new ColorMatch();
 
     private final Color kBlueTarget = ColorMatch.makeColor(0.143, 0.427, 0.429);
     private final Color kGreenTarget = ColorMatch.makeColor(0.197, 0.561, 0.240);
@@ -106,7 +109,7 @@ public class Robot extends TimedRobot {
 	boolean redState = false;
 	boolean greenState = false;
 	boolean blueState = false;
-	boolean buttState;
+	boolean buttState = false;
 	boolean buttState2;
 	boolean buttState3;
 	boolean buttState4;
@@ -187,6 +190,7 @@ public class Robot extends TimedRobot {
 	public void teleopInit() {
 		lastCompresserUseTime = System.currentTimeMillis();
 		sandstormStartState = false;
+		buttState = false;
 	}
 	
 	public void teleopPeriodic() {
@@ -194,6 +198,7 @@ public class Robot extends TimedRobot {
 		double rightAxis = -driveController.getRawAxis(rightStickID);
 		double leftAxis = -driveController.getRawAxis(leftStickID);
 		double armAxis = -manipController.getRawAxis(armStickID);
+		
 		// (); //which channels?
 
 		leftAxis = limitAxis(leftAxis);
@@ -205,7 +210,7 @@ public class Robot extends TimedRobot {
 		armAxis = limitSpeed(armAxis);
 
 		myRobot.tankDrive(leftAxis, rightAxis);
-
+		wheelGo();
 		/*(if(armSwitch.get()){
 			armMotor.set(0);
 		}
@@ -213,14 +218,10 @@ public class Robot extends TimedRobot {
 			armMotor.set(armAxis);
 		}*/
 
-		armMotor.set((0.3)*(armAxis));
-
+		armMotor.set((0.5)*(armAxis));
 
 		togglePiston(hookID, hook);
-	//	findColor(redID, kRedTarget, buttState2, "Red");
-	//	findColor(blueID, kBlueTarget, buttState3, "Blue");
-	//	findColor(greenID, kGreenTarget, buttState4, "Green");
-		findColor(yellowID, kYellowTarget, buttState5, "Yellow");
+
 		turnWheel();
 
 		SmartDashboard.putNumber("time since piston last used",
@@ -298,51 +299,17 @@ public class Robot extends TimedRobot {
 		}
 		
 	}
-
-	public void findColor(int buttonID, Color target, boolean butt, String colour) {
-		String colorString2;
-		m_colorMatcher2.addColorMatch(kRedTarget);
-		m_colorMatcher2.addColorMatch(kYellowTarget);
-		m_colorMatcher2.addColorMatch(kBlueTarget);
-		m_colorMatcher2.addColorMatch(kGreenTarget); 
-
-		Color detectedColor2 = m_colorSensor.getColor();
-		ColorMatchResult match2 = m_colorMatcher2.matchClosestColor(detectedColor2);	
-
-		if (manipController.getRawButtonReleased(buttonID)){
-				buttState3 = true;
-			}
-
-
-		if (match2.color == kBlueTarget) {
-			colorString2 = "Blue";
-		} else if (match2.color == kRedTarget) {
-			colorString2 = "Red";
-		} else if (match2.color == kGreenTarget) {
-			colorString2 = "Green";
-		} else if (match2.color == kYellowTarget) {
-			colorString2 = "Yellow";
-		} else {
-			colorString2 = "Unknown";
-		}
-		SmartDashboard.putString("Game sensor reads", colorString2);
-	
-		if((buttState3) && (colorString2 != colour)){
-			wheelMotor.set(0.3);
-
-		}
-		if ((colorString2 == colour)) {
-			wheelMotor.set(0.0);
-		}
-		
-		System.out.println("butt");
-		//System.out.println(buttState3);
-		System.out.println("match");
-		System.out.println((colorString2 == colour));
-
-		//System.out.println(i);
-
+	public void wheelGo(){
+		double wheelAxis = -manipController.getRawAxis(wheelStickID);
+		wheelAxis = limitAxis(wheelAxis);
+		wheelAxis = limitSpeed(wheelAxis);
+		System.out.println(buttState);
+		wheelMotor.set((wheelAxis));
+	/*	while (buttState = false){
+			wheelMotor.set((wheelAxis));
+		} */
 	}
+
 
 	public void turnWheel() {
 		Color detectedColor = m_colorSensor.getColor();
