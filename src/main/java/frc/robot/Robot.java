@@ -56,7 +56,7 @@ public class Robot extends TimedRobot {
 	//Manipulator Controls
 	int hookID = 5; //left bumper
 	int armStickID = 1; //left joystick
-	int wheelStickID = 5; //right joystick
+	int wheelStickID = 4; //right joystick
 	int redID = 2 ; //B button
 	int blueID = 3 ; //X button
 	int greenID = 1; //A button
@@ -107,7 +107,7 @@ public class Robot extends TimedRobot {
 	boolean redState = false;
 	boolean greenState = false;
 	boolean blueState = false;
-	boolean buttState = false;
+	boolean buttState;
 	boolean buttState2;
 	boolean buttState3;
 	boolean buttState4;
@@ -130,7 +130,7 @@ public class Robot extends TimedRobot {
 		driveController  = new XboxController(joyPort1);
 		manipController = new XboxController(joyPort2);
 		
-		armSwitch = new DigitalInput(2); 
+		armSwitch = new DigitalInput(0); 
 		
 		m_colorMatcher.addColorMatch(kBlueTarget);
 		m_colorMatcher.addColorMatch(kGreenTarget);
@@ -183,16 +183,17 @@ public class Robot extends TimedRobot {
 	
 	public void autonomousPeriodic() {
 		autoStart();
+		/*
 		if (sandstormStartState){
 			autoTurn(.2);
-		}
+		} */
 
 	}
 	
 	public void teleopInit() {
 		lastCompresserUseTime = System.currentTimeMillis();
 		sandstormStartState = false;
-		buttState = false;
+		//buttState = false;
 	}
 	
 	public void teleopPeriodic() {
@@ -202,6 +203,7 @@ public class Robot extends TimedRobot {
 		double armAxis = -manipController.getRawAxis(armStickID);
 		
 		// (); //which channels?
+		System.out.println(buttState);
 
 		leftAxis = limitAxis(leftAxis);
 		rightAxis = limitAxis(rightAxis);
@@ -213,12 +215,11 @@ public class Robot extends TimedRobot {
 
 		myRobot.tankDrive(leftAxis, rightAxis);
 		wheelGo();
-		/*(if(armSwitch.get()){
-			armMotor.set(0);
+		/*if(armSwitch.get()){
 		}
 		else {
 			armMotor.set(armAxis);
-		}*/
+		} */
 
 		armMotor.set((0.5)*(armAxis));
 
@@ -363,7 +364,7 @@ public class Robot extends TimedRobot {
 				blueState=false;
 				greenState=false;
 			}
-			wheelMotor.set(0.3);
+			wheelMotor.set(0.7);
 		}else{
 			buttState = false;
 		}
