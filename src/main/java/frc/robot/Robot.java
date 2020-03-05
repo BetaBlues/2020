@@ -1,23 +1,24 @@
 package frc.robot;
-import frc.robot.subsystems.Piston;
-import edu.wpi.first.wpilibj.ADXRS450_Gyro;
-import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.interfaces.Gyro;
-import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.Spark;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.DriverStation;
+import com.revrobotics.ColorMatch;
+import com.revrobotics.ColorMatchResult;
+import com.revrobotics.ColorSensorV3;
+
+import edu.wpi.cscore.UsbCamera;
 //for the USB Camera set up
 import edu.wpi.first.cameraserver.CameraServer;
-import edu.wpi.first.wpilibj.util.Color;
-import com.revrobotics.ColorSensorV3;
-import com.revrobotics.ColorMatchResult;
-import com.revrobotics.ColorMatch;
-import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.cscore.UsbCamera;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.Spark;
+import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.interfaces.Gyro;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
+import frc.robot.subsystems.Piston;
 
 public class Robot extends TimedRobot {
 	
@@ -30,17 +31,17 @@ public class Robot extends TimedRobot {
 	Spark armMotor;
 	Spark wheelMotor;
 	Piston hook;
-	
+	boolean i;
 	// RoboRio mapping
 	int leftMotorChannel=1;
-	int rightMotorChannel=2;
-	int armMotorChannel=3;
-	int wheelMotorChannel=0;
+	int rightMotorChannel=0;
+	int armMotorChannel=2;
+	int wheelMotorChannel=3;
 	DriverStation ds = DriverStation.getInstance();
 	
 	// Driver Station / controller mapping
-	int joyPort1=0; //driver xbox controller
-	int joyPort2=1; //manipulator xbox controller
+	int joyPort1=1; //driver xbox controller
+	int joyPort2=0; //manipulator xbox controller
 	
 	//Driver Controls
 	int lTriggerID = 2;
@@ -53,12 +54,14 @@ public class Robot extends TimedRobot {
 	XboxController manipController;
 	
 	//Manipulator Controls
-	int hookID = 5; //left trigger
-	int armStickID = 1; 
+	int hookID = 5; //left bumper
+	int armStickID = 1; //left joystick
+	int wheelStickID = 4; //right joystick
 	int redID = 2 ; //B button
 	int blueID = 3 ; //X button
 	int greenID = 1; //A button
 	int yellowID = 4; //Y button
+	int spinID = 6; //right bumper
 	//verify that stick1 and stick2 correspond to the left and right joysticks on the controller
 	//6 is right, 5 is left - bumpers
 	
@@ -66,7 +69,7 @@ public class Robot extends TimedRobot {
 	long lastCompresserUseTime;
 
 	//digital inputs
-	final double speedScalingFactor = 0.9;
+	final double speedScalingFactor = 0.5;
 	double lowSpeed = 0.2;
 	double mediumSpeed = 0.3;
 	double highSpeed = 0.6;
@@ -86,6 +89,8 @@ public class Robot extends TimedRobot {
  	private final ColorSensorV3 m_colorSensor = new ColorSensorV3(i2cPort);
 
 	private final ColorMatch m_colorMatcher = new ColorMatch();
+	private final ColorMatch m_colorMatcher2 = new ColorMatch();
+
 
     private final Color kBlueTarget = ColorMatch.makeColor(0.143, 0.427, 0.429);
     private final Color kGreenTarget = ColorMatch.makeColor(0.197, 0.561, 0.240);
@@ -102,30 +107,40 @@ public class Robot extends TimedRobot {
 	boolean redState = false;
 	boolean greenState = false;
 	boolean blueState = false;
+	boolean buttState;
+	boolean buttState2;
+	boolean buttState3;
+	boolean buttState4;
+	boolean buttState5;
 
 	public void robotInit() {
 		gyro = new ADXRS450_Gyro(); // Gyro on Analog Channel 1
-		
-		hook = new Piston (6,7, "hook");
-
+		i = false;
+		hook = new Piston(6,7, "hook");
 		leftMotor = new Spark(leftMotorChannel);
 		rightMotor = new Spark(rightMotorChannel);
 		armMotor = new Spark(armMotorChannel);
+		wheelMotor = new Spark(wheelMotorChannel);
 		leftMotor.setInverted(false);
 		rightMotor.setInverted(false);
 		armMotor.setInverted(false);
+		wheelMotor.setInverted(false);
 		myRobot = new DifferentialDrive(leftMotor,rightMotor);
 		
 		driveController  = new XboxController(joyPort1);
 		manipController = new XboxController(joyPort2);
 		
-		armSwitch = new DigitalInput(2); 
+		armSwitch = new DigitalInput(0); 
 		
 		m_colorMatcher.addColorMatch(kBlueTarget);
 		m_colorMatcher.addColorMatch(kGreenTarget);
 		m_colorMatcher.addColorMatch(kRedTarget);
 		m_colorMatcher.addColorMatch(kYellowTarget);  
 
+		m_colorMatcher2.addColorMatch(fakeBlueTarget);
+		m_colorMatcher2.addColorMatch(fakeGreenTarget);
+		m_colorMatcher2.addColorMatch(fakeRedTarget);
+		m_colorMatcher2.addColorMatch(fakeYellowTarget);
 		server = CameraServer.getInstance();
    		server.startAutomaticCapture();
 		
@@ -135,6 +150,7 @@ public class Robot extends TimedRobot {
 		Color detectedColor = m_colorSensor.getColor();
 
 		String colorString;
+
 		ColorMatchResult match = m_colorMatcher.matchClosestColor(detectedColor);
 			
 		if (match.color == kBlueTarget) {
@@ -154,9 +170,7 @@ public class Robot extends TimedRobot {
 		SmartDashboard.putNumber("Blue", detectedColor.blue);
 		SmartDashboard.putNumber("Confidence", match.confidence);
 		SmartDashboard.putString("Detected Color", colorString);
-		System.out.println("camera setting below direct");
-
-		System.out.println(UsbCamera.enumerateUsbCameras());
+		
 	}
 	
 	public void autonomousInit(){
@@ -169,16 +183,17 @@ public class Robot extends TimedRobot {
 	
 	public void autonomousPeriodic() {
 		autoStart();
+		/*
 		if (sandstormStartState){
 			autoTurn(.2);
-		}
+		} */
 
 	}
 	
 	public void teleopInit() {
 		lastCompresserUseTime = System.currentTimeMillis();
-		gyro.reset();
 		sandstormStartState = false;
+		//buttState = false;
 	}
 	
 	public void teleopPeriodic() {
@@ -186,7 +201,9 @@ public class Robot extends TimedRobot {
 		double rightAxis = -driveController.getRawAxis(rightStickID);
 		double leftAxis = -driveController.getRawAxis(leftStickID);
 		double armAxis = -manipController.getRawAxis(armStickID);
+		
 		// (); //which channels?
+		System.out.println(buttState);
 
 		leftAxis = limitAxis(leftAxis);
 		rightAxis = limitAxis(rightAxis);
@@ -197,20 +214,18 @@ public class Robot extends TimedRobot {
 		armAxis = limitSpeed(armAxis);
 
 		myRobot.tankDrive(leftAxis, rightAxis);
-
-		if(armSwitch.get()){
-			armMotor.set(0);
+		wheelGo();
+		/*if(armSwitch.get()){
 		}
 		else {
 			armMotor.set(armAxis);
-		}
+		} */
+
+		armMotor.set((0.5)*(armAxis));
 
 		togglePiston(hookID, hook);
 
-		findColor(redID, fakeRedTarget);
-		findColor(blueID, fakeBlueTarget);
-		findColor(greenID, fakeGreenTarget);
-		findColor(yellowID, fakeYellowTarget);
+		turnWheel();
 
 		SmartDashboard.putNumber("time since piston last used",
 								 (System.currentTimeMillis()-lastCompresserUseTime)/1000);
@@ -233,6 +248,18 @@ public class Robot extends TimedRobot {
 		}
 		else if (axis < -1.0){
 			axis = -1.0;
+		}
+
+		return axis;
+	}
+
+	private double limitAxisArm (double axis) {//mess with this so it doesn't go so fast
+		if (axis > 0.5){  
+			axis = 0.5;
+		}
+		else if (axis < -0.5
+		){
+			axis = -0.5;
 		}
 
 		return axis;
@@ -275,31 +302,40 @@ public class Robot extends TimedRobot {
 		}
 		
 	}
-
-	public void findColor(int buttonID, Color target) {
-		
-		m_colorMatcher.addColorMatch(fakeRedTarget);
-		m_colorMatcher.addColorMatch(fakeYellowTarget);
-		m_colorMatcher.addColorMatch(fakeBlueTarget);
-		m_colorMatcher.addColorMatch(fakeGreenTarget); 
-
-		Color detectedColor = m_colorSensor.getColor();
-    	ColorMatchResult match = m_colorMatcher.matchClosestColor(detectedColor);	
-		if (manipController.getRawButtonReleased(buttonID)){ 
-			if (target != match.color) {
-				wheelMotor.set(.3);
-
-			}else{
-				wheelMotor.set(0.0);
-			}
-
+	public void wheelGo(){
+		double wheelAxis = -manipController.getRawAxis(wheelStickID);
+		wheelAxis = limitAxis(wheelAxis);
+		wheelAxis = limitSpeed(wheelAxis);
+		System.out.println(buttState);
+		wheelMotor.set((wheelAxis));
+		Color detectedColor2 = m_colorSensor.getColor();
+		String colorString2;
+		ColorMatchResult match2 = m_colorMatcher2.matchClosestColor(detectedColor2);
+			
+		if (match2.color == fakeBlueTarget) {
+		colorString2 = "Blue";
+		} else if (match2.color == fakeRedTarget) {
+		colorString2 = "Red";
+		} else if (match2.color == fakeGreenTarget) {
+		colorString2 = "Green";
+		} else if (match2.color == fakeYellowTarget) {
+		colorString2 = "Yellow";
+		} else {
+		colorString2 = "Unknown";
 		}
+		
+		SmartDashboard.putString("Field detected colour", colorString2);
 	}
 
-	public void turnWheel(int buttonID, Color target) {
+
+	public void turnWheel() {
 		Color detectedColor = m_colorSensor.getColor();
-   		ColorMatchResult match = m_colorMatcher.matchClosestColor(detectedColor);
-		if (colorCounter <32) {
+		   ColorMatchResult match = m_colorMatcher.matchClosestColor(detectedColor);
+		if (manipController.getRawButtonReleased(spinID)){
+			buttState = true;
+
+		}
+		if ((colorCounter <32) && buttState) {
 			if (match.color == kBlueTarget && blueState == false){
 				colorCounter +=1;
 				blueState=true;
@@ -328,9 +364,9 @@ public class Robot extends TimedRobot {
 				blueState=false;
 				greenState=false;
 			}
-			wheelMotor.set(.3);
+			wheelMotor.set(0.7);
 		}else{
-			wheelMotor.set(.0);
+			buttState = false;
 		}
 	}
 }
