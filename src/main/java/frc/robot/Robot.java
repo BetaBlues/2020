@@ -90,9 +90,7 @@ public class Robot extends TimedRobot {
 
 	private final ColorMatch m_colorMatcher = new ColorMatch();
 	private final ColorMatch m_colorMatcher2 = new ColorMatch();
-	private final ColorMatch m_colorMatcher3 = new ColorMatch();
-	private final ColorMatch m_colorMatcher4 = new ColorMatch();
-	private final ColorMatch m_colorMatcher5 = new ColorMatch();
+
 
     private final Color kBlueTarget = ColorMatch.makeColor(0.143, 0.427, 0.429);
     private final Color kGreenTarget = ColorMatch.makeColor(0.197, 0.561, 0.240);
@@ -139,6 +137,10 @@ public class Robot extends TimedRobot {
 		m_colorMatcher.addColorMatch(kRedTarget);
 		m_colorMatcher.addColorMatch(kYellowTarget);  
 
+		m_colorMatcher2.addColorMatch(fakeBlueTarget);
+		m_colorMatcher2.addColorMatch(fakeGreenTarget);
+		m_colorMatcher2.addColorMatch(fakeRedTarget);
+		m_colorMatcher2.addColorMatch(fakeYellowTarget);
 		server = CameraServer.getInstance();
    		server.startAutomaticCapture();
 		
@@ -305,9 +307,23 @@ public class Robot extends TimedRobot {
 		wheelAxis = limitSpeed(wheelAxis);
 		System.out.println(buttState);
 		wheelMotor.set((wheelAxis));
-	/*	while (buttState = false){
-			wheelMotor.set((wheelAxis));
-		} */
+		Color detectedColor2 = m_colorSensor.getColor();
+		String colorString2;
+		ColorMatchResult match2 = m_colorMatcher2.matchClosestColor(detectedColor2);
+			
+		if (match2.color == fakeBlueTarget) {
+		colorString2 = "Blue";
+		} else if (match2.color == fakeRedTarget) {
+		colorString2 = "Red";
+		} else if (match2.color == fakeGreenTarget) {
+		colorString2 = "Green";
+		} else if (match2.color == fakeYellowTarget) {
+		colorString2 = "Yellow";
+		} else {
+		colorString2 = "Unknown";
+		}
+		
+		SmartDashboard.putString("Field detected colour", colorString2);
 	}
 
 
